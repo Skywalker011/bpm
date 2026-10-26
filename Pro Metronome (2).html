@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Pro Metronome</title>
+<style>
+:root{--bg:#333639;--bar:#3f4245;--card:#404347;--btn:#74777a;--acc:#d97a35;--rod:#e6a56a;--mute:#9aa0a8;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html{background:var(--bg)}
+@media(max-width:500px){html{background:linear-gradient(var(--bar) 0 calc(env(safe-area-inset-top,0px) + 66px),var(--bg) 0)}}
+@media(min-width:501px){body{border-left:1px solid #4a4d51;border-right:1px solid #4a4d51}}
+html,body{height:100%;margin:0;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:manipulation}
+body{display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;background:var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;transition:transform .1s,opacity .15s}
+button:active{transform:scale(.94)}
+.bar{display:flex;justify-content:space-around;align-items:center;background:var(--bar);padding:10px 8px;border-bottom:1px solid #4a4d51}
+.ib{display:flex;align-items:center;justify-content:center;width:48px;height:44px;border:1.5px solid #fff;border-radius:9px;font-size:13px;font-weight:600}
+.ib.on{background:var(--acc);border-color:var(--acc)}
+.ib svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:1.6}
+.stage{flex:1;min-height:120px;position:relative;margin:14px 0 6px;touch-action:none;cursor:ns-resize}
+.rod{position:absolute;left:50%;bottom:0;width:10px;height:100%;margin-left:-5px;background:var(--rod);border-radius:5px 5px 0 0;transform-origin:50% 100%;will-change:transform}
+.knob{position:absolute;left:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#fff;box-shadow:-5px 5px 10px rgba(0,0,0,.35)}
+.info{text-align:center}
+#tname{color:var(--mute);font-size:24px;font-weight:300;height:30px}
+#unit{color:var(--mute);font-size:14px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.rb{width:56px;height:56px;border:1.5px solid #fff;border-radius:50%;font-size:34px;font-weight:200;line-height:1}
+#bpm{font-size:92px;font-weight:300;font-variant-numeric:tabular-nums;line-height:1.1;min-width:150px}
+#dots{display:flex;justify-content:space-around;padding:6px 22px 0;height:44px;align-items:center}
+.d{width:18px;height:18px;border-radius:50%;border:1.5px solid #fff;transition:background .08s}
+.d.on{background:#fff}.d.on.acc{background:var(--acc);border-color:var(--acc)}
+.ctl{display:flex;justify-content:space-between;align-items:center;padding:14px 22px 12px;color:#fff}
+.ts{font:700 26px/0.9 "Bodoni 72",Didot,Georgia,serif;text-align:center}
+.ts i{display:block;font-style:normal}
+.ctl svg{width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.6}
+#go{margin:0 16px 18px;height:62px;border:1.5px solid #fff;border-radius:16px;font-size:26px;letter-spacing:1px;width:calc(100% - 32px)}
+#go.on{background:var(--acc);border-color:var(--acc)}
+#fl{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:5}
+.mod{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:10;display:none;align-items:center;justify-content:center;padding:14px}
+.mod.show{display:flex}
+.sheet{background:#383b3f;border-radius:22px;padding:14px;width:100%;max-width:440px;max-height:96%;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.pan{background:var(--card);border-radius:20px;padding:10px;display:grid;gap:10px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.tsb{aspect-ratio:1;border-radius:50%;background:var(--btn);font:700 26px/.9 "Bodoni 72",Didot,Georgia,serif;color:#e9e9e9}
+.tsb.on,.pb.on{background:#cc7a38}
+.sb{height:62px;display:flex;align-items:center;justify-content:center;color:#777a7d}
+.sb.on{color:#f0f0f0}.sb svg{height:36px;fill:currentColor}
+.pb{height:52px;border-radius:8px;background:#7a7d80;font-size:19px}
+.pb.on{font-weight:700}
+.chk{display:flex;align-items:center;gap:12px;font-size:19px}
+.chk input{width:26px;height:26px;accent-color:var(--acc)}
+.ok{height:58px;border-radius:16px;background:#d97a35;font-size:24px}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--mute)}
+.fld input[type=number]{background:#2b2d30;border:1px solid #55585c;border-radius:10px;padding:10px;color:#fff;font-size:17px}
+.fld input[type=range]{accent-color:var(--acc)}
+h3{margin:0;font-size:18px}
+</style></head><body>
+<div id="fl"></div>
+<div class="bar">
+ <button class="ib" id="tuner" aria-label="A440 reference tone">A440</button>
+ <button class="ib" id="tap" aria-label="Tap tempo">TAP</button>
+ <button class="ib" id="gear" aria-label="Settings and timer"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></button>
+</div>
+<div class="stage" id="stage"><div class="rod" id="rod"><div class="knob" id="knob"></div></div></div>
+<div class="info">
+ <div id="tname"></div>
+ <div class="row">
+  <button class="rb" id="minus" aria-label="Slower">&minus;</button>
+  <div><div id="bpm">60</div></div>
+  <button class="rb" id="plus" aria-label="Faster">+</button>
+ </div>
+ <div><span id="unit"></span> <span id="tleft" style="color:var(--acc);margin-left:8px"></span></div>
+</div>
+<div id="dots"></div>
+<div class="ctl">
+ <button class="ts" id="tsb"><i id="tt">4</i><i id="tbm">4</i></button>
+ <button id="snd" style="display:flex;align-items:center;gap:6px;font-size:15px"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9H3zM16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12"/></svg><span id="sname">Click</span></button>
+ <button id="flb" aria-label="Visual flash"><svg viewBox="0 0 24 24"><circle id="flc" cx="12" cy="12" r="8"/></svg></button>
+ <button id="acb" aria-label="Accent first beat"><svg viewBox="0 0 24 24"><path d="M12 3L2.5 20h19L12 3z"/></svg></button>
+ <button id="chev" aria-label="Rhythm settings"><svg viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></svg></button>
+</div>
+<button id="go">START</button>
+
+<div class="mod" id="m1"><div class="sheet">
+ <div class="pan g4" id="gts"></div>
+ <div class="pan g4" id="gsub"></div>
+ <label class="chk"><input type="checkbox" id="chk"> Add accent to the first beat</label>
+ <div class="pan g4" id="gpre"></div>
+ <button class="ok" id="ok1">OK</button>
+</div></div>
+
+<div class="mod" id="m2"><div class="sheet">
+ <h3>Settings &amp; Practice</h3>
+ <div class="fld"><span>Volume <b id="vt" style="color:#fff"></b></span><input type="range" id="vol" min="0" max="1" step=".01"></div>
+ <div class="fld">Practice timer (minutes, 0 = off)<input type="number" id="tmin" min="0" max="180"></div>
+ <label class="chk" style="font-size:16px"><input type="checkbox" id="inc"> Speed trainer</label>
+ <div class="fld">Increase BPM by<input type="number" id="step" min="1" max="30"></div>
+ <div class="fld">Every N bars<input type="number" id="bars" min="1" max="64"></div>
+ <button class="ok" id="ok2">Done</button>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const TS=[[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[3,8],[5,8],[6,8],[7,8],[9,8],[12,8]];
+const SOUNDS=['Met 1','Met 2','Click','Wood','Beep','Cowbell','Hat'];
+const GR={5:[0,3],7:[0,2,4]};
+// levels: 0 mute, 1 soft, 2 normal, 3 accent
+const clave=h=>{const a=Array.from({length:16},(_,i)=>i%4?0:1);h.forEach((x,k)=>a[x]=k?2:3);return a};
+const PRE={
+ '2beat-1':{ts:[4,4],s:0,p:[3,0,2,0]},'2beat-2':{ts:[4,4],s:0,p:[0,2,0,2]},
+ '8beat-1':{ts:[4,4],s:1,p:[3,1,2,1,2,1,2,1]},'8beat-2':{ts:[4,4],s:1,p:[2,1,3,1,2,1,3,1]},
+ '16beat-1':{ts:[4,4],s:3,p:[3,1,1,1,2,1,1,1,2,1,1,1,2,1,1,1]},'16beat-2':{ts:[4,4],s:3,p:[3,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1]},
+ 'Swing':{ts:[4,4],s:2,p:[3,0,1,2,0,1,2,0,1,2,0,1]},'Waltz':{ts:[3,4],s:0,p:[3,1,1]},
+ 'Shuffle':{ts:[4,4],s:2,p:[2,0,1,3,0,1,2,0,1,3,0,1]},'Bossa':{ts:[4,4],s:3,p:clave([0,3,6,10,13])},
+ 'Latin':{ts:[4,4],s:3,p:clave([0,3,6,10,12])},'Custom':null};
+const S={bpm:70,top:4,bot:4,sub:0,accent:true,snd:1,flash:true,pre:'Custom',pat:null,vol:.8,tmin:0,inc:false,bars:4,step:5,playing:false};
+try{Object.assign(S,JSON.parse(localStorage.getItem('pm2')||'{}'),{playing:false})}catch(e){}
+if(S.v!==3){S.snd=1;S.bpm=70;S.sub=0;S.pat=null;S.pre='Custom';S.v=3}
+const save=()=>{try{localStorage.setItem('pm2',JSON.stringify(S))}catch(e){}};
+
+// ---- meter theory ----
+// Compound (6/8, 9/8, 12/8): beat = dotted quarter, divided in 3 eighths. Otherwise beat = note named by the denominator.
+const comp=()=>S.bot===8&&S.top%3===0&&S.top>=6;
+const beats=()=>comp()?S.top/3:S.top;
+const subs=()=>comp()?[1,3,6]:[1,2,3,4];
+const unit=()=>comp()?'\u2669. = beats per min':S.bot===8?'\u266A = beats per min':'\u2669 = beats per min';
+const NAMES=[[40,'Grave'],[60,'Largo'],[66,'Larghetto'],[76,'Adagio'],[108,'Andante'],[120,'Moderato'],[156,'Allegro'],[176,'Vivace'],[200,'Presto'],[999,'Prestissimo']];
+
+// ---- audio ----
+const SMP={acc:'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4v/4//r/6v/e/+D/7v/0/+z/6P/u//T/+P/+/wAA/P/w/+7/+P/+/wgAEgAMAAoAEgAMAAIABgAEAAQADAAGAPz/AAD+//j/9v/2//j//v/4//b/+v/2/+r/6v/2/wAA/P/0//L/7P/w/wQADAAAAPz/+P/2/wIACAD4/+j/7v/8/wIA/P/+/wgABgAAAAAA/v/+/wQAAgD2//L/9v8CAAoADAAIAP7/8v/s//L/AAAGAAAAAgAGAP7/+v/+//D/5P/o/+r/6P/y//j/+P/6//j/+P/+/wAA/v/4//b/+P/0/+z/8v/2//D/9v8EAAYABgAAAPb/+P8EAAQA/P/6//r/8P/m/+b/7P/u//L/+P/2//T/9P/0//T/+P/4//T/7v/u//D/7P/u//T/9P/2//z/+P/w//D/9v8AAAQAAgD8//L/7v/8/woABAAAAP7/+v8AAP7/7P/m/+7/7v/s/+j/5P/s/+z/6v/6/wQA+P/y//L/7v/w//L/8v8CAA4ADgAOAAYA+P/4//7/AgAEAAAA+v/6//L/7v/w/+z/7v/4//b/8v/2//j/+P/6//j/+P/6//D/7v/0//b/9v/4//L/9P/8//r/+P/6//D/7P/2//j/8v/u/+7/8v/y/+7/7P/y//T/8P/q/+r/9P/6//r/+v/8//7//v8AAAoAEgAKAAIABgACAPj/+v8AAP7/AAACAAAAAAAAAAAAAgAAAPj/9v/6//j/9P/2//r//P/8//j/8v/0//j/9P/s/+z/8P/u//L/9v/6//7/+P/w//L/9v/y//L/9P/y//T/+P/4//z//v8AAAQABAD+//7//P/4//r/+v/0//T/+v8CAAgAAAD4//z/+v/0//b/+P/4//z/+P/y//b/9v/4/wAA/v/+/wAA+v/0//j/+P/4//z/+P/2//z/+P/2//r/+v/6//r/9v/0//j/9v/2//j/9v/6//7//P/+/wAA/v/+/wAA/P/8//z//P/8//r/9v/4//j/8v/w//D/8P/y//T/9v/4//b/9v/6//z//v/8//z//v8AAP7//v8AAPz/+v/8//r/+P/2//b/9v/0//T/9P/0//L/9v/4//j/+v/6//z//P/6//r/+P/4//z//v/+//7//v/8//7/AAD+//7/AAACAAIAAAAAAAAAAAAAAAAAAgACAAQABAACAAIAAgACAAAA/v/8//7//P/8//z/+v/6//7//v/6//r//P/+//z/+v/6//r/+v/6//r//P/+//7//P/8//7//v/+/wAAAAAAAAIABAAAAP7/AgAAAAAAAAAAAAAAAAD+//7//v/+//z//v/+//z//P/8//7//P/4//r/+v/6//r//v/6//j/+v/8//z//v/8//z/+v/6//z//P8AAAAA/v/8//7//P/8//7/AAAAAAIAAgD+//z//v8AAP7//P/8//r/+v/8//7//P/8//z/+v/8//z/+v/4//r//P/8//r//P/+//7//P/+/wAA/v/8//z//v8AAAAAAgACAAIA/v/8//7/AAAAAP7//v/+//7/AAAAAP7//v/8//z//v8AAP7/AAAAAP7//P/8//7/AAD+/wAAAgACAAAA/v/+/wAAAAD+//7/AAD+/wAAAAD8//z//v/8//z//v/+//z//P/6//z//P/8//7/AAD+//z/AAAAAP7//v/+//7/AAAAAAAAAAD+//7//v/8/wAAAAAAAAAAAAD+//z//v/+//7//v/+/wAA/v/8//7/AAD+//7//v/+/wAAAAAAAP7/AAD+//7//v/+/wAAAAD+//7/AAACAAIAAAD+/wAAAAD+//7/AAD+//7/AAD+//7//v8AAAAAAAD+//7/AAAAAP7//v/8//z//v8AAAAA/v/+/wAAAAAAAP7/AAAAAAAAAgACAAAAAAACAAAAAAAAAAAAAgAAAAAA/v8AAP7/AAACAAIAAAACAAIAAgACAAIAAgAAAAAAAAD+//z//v/+//z//v8AAP7//v8AAAAAAAAAAP7/AAAAAAAAAgACAAAAAAACAAAAAAAAAAAAAgAAAP7/AAAAAAIAAgACAAAAAAAAAP7//v/+//z//v/+//z//P/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAIAAgAAAAAAAgACAAAAAAAAAAAA/v8AAAAAAAAAAAAAAAD+/wAAAAAAAAAAAAAAAAAA/v8AAAAAAAD+/wAAAAAAAP7//v/+//7/AAAAAP7//v8AAP7//v/+//7//v/+//7//v8AAP7//v/+//7//v/+//7//v/+//7//v/+//7//v/8//z//v/+//7//v/+//7//v/+//7//v/+//7/AAD+//7//v8AAAAA/v/+//7//v/+//7/AAAAAP7/AAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAP7/AAAAAAAAAAAAAP7//v/+//7//v/8//7/AAD+//7//v/+//7//v/+//7//v/+//7/AAAAAP7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAP7//v/+//7//v/+/wAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAP7//v/+//7//v8AAAAAAAAAAAAA/v8AAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAP7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAD+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+/wAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7/AAAAAP7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7/AAD+//7/AAD+//7/AAAAAP7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAD+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////////////////////////////////////////////////////////////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//////////////////////////////////////////////////////////////////////////////////////////////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//////////////////////////////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',nor:'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/P8AAAIAAgAGAAQABAAIAAYAAAAAAP7//P/+/wAA/v/+//j/+v8EAAQAAgAGAAgACAAIAAQA/P/6//j/9v/0//T/9v/2//L/9P/4//b/8P/y//T/9v/8//r/+v/+/wAA/v/+/wIABgAGAAIACAAQABAAEAASAA4ADgAQABAADAAGAAIAAAACAAQABgAIAAQAAAD4//L/8P/y//D/8P/u/+z/7v/w/+7/7P/s//D/8v/0//b//P8AAAIABAAGAAgADAAMAAwADgAQABIAEgAQABIAGAAYABQAFAASAA4ADAAIAAYABgAGAAAA/P/6//r/+P/y/+7/8P/u/+z/6v/q/+r/7v/u/+7/8P/y//T/+v/8//7/AAAAAAIACAAIAAgACgAKAAoADAAMAAwADgAMAAgACAAIAAgABgACAAIABgAEAP7//P/4//j/+P/2//T/9v/0//L/9v/0//b/+v/6//r//v/8//z//P/+/wAAAAAAAAQABAAEAAYACgAIAAgABgACAAAAAAD+//z//P/8//r/+v/6//r//P/6//r/+v/4//j/9v/0//T/+v/8//z//P/6//j/+P/8/wAABgAKAAoADAAMAAwACgAEAAQACgAMAAoABgAEAAQABgAGAAQABAAGAAQAAgD8//T/6v/o/+7/+v8GAA4ADgAGAPz/+P/0//T/9P/4//7/CAAQAAoA/v/2//b//v8CAP7/AAAKAAwACAAGAAYABAD8//b/9v/8/wAABAAIAAoAAgDw/+T/8P8IABIABgDy/+b/6v/4/wQADAAQAAYA+P/y//r/AAACAAIADAAeACoAJAAQAPr/8v/2//r/+v/0/+j/4v/s//r/AgAIAAQA/v/8/wAABAACAPb/7P/s//T//v8CAAgAFAAcABYADAACAPz//P/8//j/9v/8/wgADAACAPr//v8AAPr/8v/2/wQADAAIAAAA/P/4//b/+P/+/wIAAAD8//j/+P/8/wIABgAEAAAA/P/8//7//v/+//z/+v/6//7/AAD8//j/+v8CAAoADAAGAPr/8P/y//r/AAAGAAgABgAEAAAA/v/+//z/+v/+/wgACgAGAAAA/v8AAPz/+P/y/+7/9P/+/wgACAAGAAIAAAAAAAAAAAAAAAIA/v8AAAQACAACAPr/9v/2//j/+v/6//z//v8CAAQABgAEAP7/+P/6/wAABAAEAAAA/v8AAAIAAgAAAAAAAgAEAAQAAAD+//7/AAAAAAAA/P/6//r/+v/8//z//P/8//7//v8AAP7//v/+/wAA/v/+//z/+v/6//z//v/+//7/AAACAAIAAAAAAAAAAAAAAAAA/v8AAP7//v8AAAIAAgACAAIAAgACAAAAAAAAAP7//v/+//7//v/+//7//P/8//z//v/+//7//v/+//7//v/8//7//v/+//7/AAD+//7/AAD+//7//v8AAAIAAgAAAAAAAAAAAAIAAgACAAIAAAAAAAIAAAAAAAAAAAAAAAIAAAAAAP7//v/+//7//v/+//7//v/+//7//v/+/wAA/v/+/wAAAAD+//7//P/8//z//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//P/+//7//v8AAAAAAAD+//z//P/8//z//P/+//7//P/+//7//v/+/wAAAAACAAIAAAAAAAAAAAAAAAAAAAACAAIAAAAAAAAA/v/+//7//v/+//z//P/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAD+//7//v/+/wAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7/AAAAAAIAAAAAAAAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/8//7//v/+//7//v8AAP7//v/+/wAAAAAAAAAA/v/+//7//v/+//7//v8AAAAA/v8AAAAAAgACAAAAAAAAAAAAAAAAAAAAAAD+//7/AAAAAP7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+//7/AAAAAP7/AAAAAAAAAAAAAP7//v/+//7//v/+//7//P/8//z//v/+//7//v/+//7//v/+//7//v/+//z//P/+/wAAAgACAAAAAAACAAIAAgAAAAAA/v/+//7//v/+//7/AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7//v/8//z//v/+//7//v/8//z//P/+//7//v/+//7//v/+//7//v/8//z//v/+//7/AAAAAAAAAAAAAAIAAAAAAP7/AAAAAAIAAgACAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAP7//v/+//7//v/8//z//P/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAgACAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAD+/wAAAAAAAAAAAAAAAP7//v/8//z//v/+//7//v/+//7//v/+//7//v/+//7//P/8//7//v/+//7//v/+//7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//z//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAAAAAAD+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+//7//v/+/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+//7//v/+//7//v/+//7//v/+//7//v8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAAAAAAA//////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'};let BUF=null,dry;
+let ctx,master,nbuf,next=0,tick=0,gt=0,bar=0,beat=0,t0=0,cur=null,wk,iv;
+const q=[];
+function init(){
+ if(!ctx){
+  ctx=new(window.AudioContext||window.webkitAudioContext)();
+  const c=ctx.createDynamicsCompressor();c.threshold.value=-12;c.ratio.value=4;c.attack.value=.002;c.release.value=.1;
+  const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=.5;
+  dry=ctx.createGain();dry.gain.value=S.vol;dry.connect(ctx.destination);master=ctx.createGain();master.gain.value=S.vol;master.connect(lp);lp.connect(c);c.connect(ctx.destination);
+  nbuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+ BUF={};for(const k in SMP){const bin=atob(SMP[k]),n=bin.length>>1,b=ctx.createBuffer(1,n,48000),d=b.getChannelData(0);for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>32767)v-=65536;d[i]=v/32768}BUF[k]=b}
+ }
+ if(ctx.state!=='running')ctx.resume();
+}
+function env(t,g,d){const o=ctx.createGain();o.gain.setValueAtTime(.0001,t);o.gain.linearRampToValueAtTime(g,t+.001);o.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(master);return o}
+function osc(type,f1,f2,t,d,out){const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f1,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d*.5);o.connect(out);o.start(t);o.stop(t+d+.02)}
+function noise(t,d,type,f,qq,out){const n=ctx.createBufferSource();n.buffer=nbuf;const fl=ctx.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=qq;n.connect(fl);fl.connect(out);n.start(t,Math.random()*.5);n.stop(t+d+.02)}
+function voice(t,lv){
+ const g={1:.35,2:.6,2.5:.75,3:.9}[lv],p={1:.84,2:1,2.5:1.12,3:1.335}[lv];
+ switch(SOUNDS[S.snd]){
+  case'Met 2':{ // recorded sample, played dry (no filter/compressor) for exact reproduction
+   const src=ctx.createBufferSource(),gn=ctx.createGain();src.buffer=BUF[lv>=3?'acc':'nor'];gn.gain.value={1:.55,2:1,2.5:1.8,3:1}[lv];src.connect(gn);gn.connect(dry);src.start(t);break}
+  case'Met 1':{ // modelled on reference clip: ~1.2-1.7kHz resonant tick, -40dB by ~20ms, accent +11dB, same pitch
+   const m={1:.2,2:.3,2.5:.5,3:1}[lv],o=env(t,m,.045);
+   osc('sine',1380,0,t,.045,o);
+   const a=ctx.createGain();a.gain.value=.7;a.connect(o);osc('sine',1660,0,t,.045,a);
+   const b=ctx.createGain();b.gain.value=.4;b.connect(o);osc('sine',1240,0,t,.045,b);
+   const o2=env(t,m*.5,.012);noise(t,.012,'highpass',4000,.5,o2);break}
+  case'Click':{ // soft mechanical tock: tuned body + tiny filtered transient
+   const o=env(t,g,.07);osc('sine',1250*p,1100*p,t,.07,o);
+   const o2=env(t,g*.35,.03);osc('sine',2500*p,0,t,.03,o2);
+   const o3=env(t,g*.25,.012);noise(t,.012,'lowpass',3500,.5,o3);break}
+  case'Wood':{
+   const o=env(t,g,.11);osc('sine',820*p,700*p,t,.11,o);
+   const o2=env(t,g*.4,.05);osc('sine',1230*p,0,t,.05,o2);
+   const o3=env(t,g*.2,.015);noise(t,.015,'lowpass',1800,.7,o3);break}
+  case'Beep':{const o=env(t,g*.7,.09);osc('sine',880*p,0,t,.09,o);break}
+  case'Cowbell':{
+   const o=env(t,g*.45,.22),b=ctx.createBiquadFilter();b.type='bandpass';b.frequency.value=1500;b.Q.value=.6;b.connect(o);
+   osc('triangle',540*p,0,t,.22,b);osc('triangle',810*p,0,t,.22,b);break}
+  case'Hat':{const o=env(t,g*.55,lv>=3?.1:.04);noise(t,.1,'highpass',7500,.5,o);break}
+ }
+}
+function one(){
+ const B=beats(),Sb=subs()[S.sub]||1,n=B*Sb,d=60/S.bpm,bi=Math.floor(tick/Sb),si=tick%Sb;
+ let lv=1;
+ if(S.pat)lv=S.pat[gt%S.pat.length];
+ else if(si===0)lv=bi===0?(S.accent?3:2):((S.bot===8&&!comp()&&(GR[S.top]||[]).includes(bi))?2.5:2);
+ if(lv>0)voice(next,lv);
+ if(si===0){q.push({t:next,d,b:bi,lv,dir:beat%2?-1:1});beat++}
+ next+=d/Sb;gt++;tick++;
+ if(tick>=n){tick=0;bar++;if(S.inc&&bar>=S.bars){bar=0;setBpm(Math.min(300,S.bpm+S.step))}}
+}
+function sched(){if(!S.playing)return;while(next<ctx.currentTime+.12)one()}
+try{wk=new Worker(URL.createObjectURL(new Blob(['let i;onmessage=e=>{clearInterval(i);if(e.data)i=setInterval(()=>postMessage(0),e.data)}'])));wk.onmessage=sched}catch(e){wk=null}
+function tmr(ms){if(wk)wk.postMessage(ms);else{clearInterval(iv);if(ms)iv=setInterval(sched,ms)}}
+let lock=null;
+async function wl(on){try{if(on)lock=await navigator.wakeLock.request('screen');else if(lock){lock.release();lock=null}}catch(e){}}
+function start(){
+ init();S.playing=true;tick=gt=bar=beat=0;cur=null;q.length=0;next=ctx.currentTime+.08;t0=next;
+ tmr(25);$('go').textContent='STOP';$('go').classList.add('on');requestAnimationFrame(frame);wl(true);
+}
+function stop(){
+ S.playing=false;tmr(0);cur=null;q.length=0;$('go').textContent='START';$('go').classList.remove('on');
+ $('rod').style.transform='';$('tleft').textContent='';[...$('dots').children].forEach(d=>d.classList.remove('on','acc'));wl(false);
+}
+function frame(){
+ if(!S.playing)return;
+ const now=ctx.currentTime-(ctx.outputLatency||ctx.baseLatency||0);
+ while(q.length&&q[0].t<=now){cur=q.shift();hit(cur)}
+ if(cur){const ph=Math.min(1,(now-cur.t)/cur.d);$('rod').style.transform=`rotate(${cur.dir*17*Math.cos(Math.PI*ph)}deg)`}
+ if(S.tmin>0){const r=S.tmin*60-(ctx.currentTime-t0);if(r<=0){stop();return}$('tleft').textContent=Math.floor(r/60)+':'+String(Math.floor(r%60)).padStart(2,'0')}
+ requestAnimationFrame(frame);
+}
+function hit(e){
+ [...$('dots').children].forEach((d,i)=>{d.classList.toggle('on',i===e.b);d.classList.toggle('acc',i===e.b&&e.lv>=3)});
+ if(S.flash){const d=$('dots').children[e.b];if(d)d.animate([{transform:'scale(1.55)'},{transform:'scale(1)'}],{duration:180,easing:'ease-out'})}
+}
+
+// ---- tuner A440 ----
+let tn=null;
+$('tuner').onclick=()=>{init();if(tn){tn.g.gain.setTargetAtTime(0,ctx.currentTime,.03);tn.o.stop(ctx.currentTime+.2);tn=null;$('tuner').classList.remove('on')}
+ else{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=440;g.gain.value=0;g.gain.setTargetAtTime(.3,ctx.currentTime,.03);o.connect(g);g.connect(master);o.start();tn={o,g};$('tuner').classList.add('on')}};
+
+// ---- UI ----
+function setBpm(v){
+ S.bpm=Math.max(20,Math.min(300,Math.round(v)));
+ $('bpm').textContent=S.bpm;$('tname').textContent=NAMES.find(n=>S.bpm<=n[0])[1];
+ $('knob').style.top=(6+(S.bpm-20)/280*88)+'%';save();
+}
+function note(n,beams,sp,trip,dot){
+ const w=14+(n-1)*sp;let s=`<svg viewBox="0 0 ${w} 30" style="width:${w*1.3}px">`;
+ for(let i=0;i<n;i++){const x=7+i*sp;s+=`<ellipse cx="${x}" cy="24" rx="5" ry="3.6" transform="rotate(-20 ${x} 24)"/><rect x="${x+3.6}" y="5" width="1.6" height="19"/>`}
+ if(dot)s+=`<circle cx="${17}" cy="24" r="1.8"/>`;
+ for(let k=0;k<beams;k++)s+=`<rect x="${10.6}" y="${5+k*4}" width="${(n-1)*sp+1.6}" height="2.4"/>`;
+ if(trip)s+=`<text x="${w/2}" y="4" font-size="8" text-anchor="middle" font-family="serif" font-style="italic">3</text>`;
+ return s+'</svg>';
+}
+function build(){
+ $('tt').textContent=S.top;$('tbm').textContent=S.bot;$('unit').textContent=unit();$('sname').textContent=SOUNDS[S.snd];
+ const dots=$('dots');dots.innerHTML='';for(let i=0;i<beats();i++){const d=document.createElement('div');d.className='d';dots.appendChild(d)}
+ $('gts').innerHTML='';TS.forEach(([t,b])=>{const e=document.createElement('button');e.className='tsb'+(t===S.top&&b===S.bot?' on':'');e.innerHTML=`<i style="display:block;font-style:normal">${t}</i><i style="display:block;font-style:normal">${b}</i>`;e.onclick=()=>{S.top=t;S.bot=b;S.pre='Custom';S.pat=null;S.sub=Math.min(S.sub,subs().length-1);build();save()};$('gts').appendChild(e)});
+ const ic=comp()?[[1,0,12,0,1],[3,1,12],[6,2,8]]:[[1,0,12],[2,1,12],[3,1,12,1],[4,2,12]];
+ $('gsub').innerHTML='';ic.forEach((a,i)=>{const e=document.createElement('button');e.className='sb'+(i===S.sub?' on':'');e.innerHTML=note(a[0],a[1],a[2],a[3],a[4]);e.onclick=()=>{S.sub=i;S.pre='Custom';S.pat=null;build();save()};$('gsub').appendChild(e)});
+ $('gpre').innerHTML='';Object.keys(PRE).forEach(k=>{const e=document.createElement('button');e.className='pb'+(S.pre===k?' on':'');e.textContent=k;e.style.fontSize='17px';e.onclick=()=>{const p=PRE[k];if(p){S.top=p.ts[0];S.bot=p.ts[1];S.sub=p.s;S.pat=p.p}else S.pat=null;S.pre=k;build();save()};$('gpre').appendChild(e)});
+ $('chk').checked=S.accent;$('acb').style.opacity=S.accent?1:.45;$('flc').style.fill=S.flash?'#d97a35':'none';$('flc').style.stroke=S.flash?'#d97a35':'#fff';
+}
+$('chk').onchange=e=>{S.accent=e.target.checked;build();save()};
+$('acb').onclick=()=>{S.accent=!S.accent;build();save()};
+$('flb').onclick=()=>{S.flash=!S.flash;build();save()};
+$('snd').onclick=()=>{S.snd=(S.snd+1)%SOUNDS.length;build();save();if(ctx&&!S.playing){voice(ctx.currentTime+.02,3)}else if(!ctx){init();voice(ctx.currentTime+.02,3)}};
+$('go').onclick=()=>S.playing?stop():start();
+$('plus').onclick=()=>setBpm(S.bpm+1);$('minus').onclick=()=>setBpm(S.bpm-1);
+let rep;[['plus',1],['minus',-1]].forEach(([id,d])=>{const b=$(id);b.addEventListener('pointerdown',()=>{rep=setTimeout(function r(){setBpm(S.bpm+d);rep=setTimeout(r,70)},450)});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearTimeout(rep)))});
+const st=$('stage');let drag=false;
+function mv(y){const r=st.getBoundingClientRect(),p=Math.max(.06,Math.min(.94,(y-r.top)/r.height));setBpm(20+(p-.06)/.88*280)}
+st.onpointerdown=e=>{drag=true;st.setPointerCapture(e.pointerId);mv(e.clientY)};st.onpointermove=e=>{if(drag)mv(e.clientY)};st.onpointerup=st.onpointercancel=()=>drag=false;
+let taps=[];$('tap').onclick=()=>{const n=performance.now();if(taps.length&&n-taps[taps.length-1]>2000)taps=[];taps.push(n);if(taps.length>6)taps.shift();if(taps.length>1)setBpm(60000/((taps[taps.length-1]-taps[0])/(taps.length-1)))};
+const open=id=>$(id).classList.add('show'),shut=id=>$(id).classList.remove('show');
+['tsb','chev'].forEach(i=>$(i).onclick=()=>open('m1'));$('ok1').onclick=()=>shut('m1');
+$('gear').onclick=()=>{$('vol').value=S.vol;$('vt').textContent=Math.round(S.vol*100)+'%';$('tmin').value=S.tmin;$('inc').checked=S.inc;$('step').value=S.step;$('bars').value=S.bars;open('m2')};
+$('vol').oninput=e=>{S.vol=+e.target.value;$('vt').textContent=Math.round(S.vol*100)+'%';if(master){master.gain.setTargetAtTime(S.vol,ctx.currentTime,.01);dry.gain.setTargetAtTime(S.vol,ctx.currentTime,.01)}};
+$('ok2').onclick=()=>{S.tmin=Math.max(0,+$('tmin').value||0);S.inc=$('inc').checked;S.step=Math.max(1,+$('step').value||5);S.bars=Math.max(1,+$('bars').value||4);if(S.playing)t0=ctx.currentTime;save();shut('m2')};
+document.querySelectorAll('.mod').forEach(m=>m.addEventListener('pointerdown',e=>{if(e.target===m)m.classList.remove('show')}));
+document.addEventListener('keydown',e=>{if(/INPUT/.test(e.target.tagName))return;if(e.code==='Space'){e.preventDefault();$('go').click()}
+ else if(e.code==='ArrowUp'||e.code==='ArrowRight'){e.preventDefault();setBpm(S.bpm+(e.shiftKey?10:1))}
+ else if(e.code==='ArrowDown'||e.code==='ArrowLeft'){e.preventDefault();setBpm(S.bpm-(e.shiftKey?10:1))}
+ else if(e.code==='KeyT')$('tap').click()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.playing)wl(true)});
+S.sub=Math.min(S.sub,subs().length-1);build();setBpm(S.bpm);
+</script></body></html>
